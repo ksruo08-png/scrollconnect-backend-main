@@ -1,126 +1,140 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+ScrollConnect Backend (Auth API)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS REST API with user registration, login (JWT), a protected profile endpoint, and a users list with pagination, search, filtering and sorting.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Tech Stack
+NestJS (controllers, services, modules, guards)
+TypeORM + SQLite (file database, zero setup)
+bcrypt for password hashing
+JWT (@nestjs/jwt) for authentication
+class-validator for request validation
+@nestjs/throttler for rate limiting
+Swagger (@nestjs/swagger) for API docs
+Jest + Supertest for automated e2e tests
+Features
+User registration with hashed passwords (never stored in plain text)
+Login that verifies credentials and returns a JWT
+Protected profile endpoint (Authorization: Bearer <token>)
+Request validation with meaningful error messages
+Duplicate email detection (409)
+Users list with pagination, search, date filter and sorting (sortBy is whitelisted)
+Rate limiting (10 requests per minute per client)
+Swagger documentation at /docs
+Automated e2e tests
+Getting Started
+1. Install dependencies
+bash
+npm install
+2. Set up environment variables
 
-## Description
+Copy .env.example to .env and change the secret:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+bash
+cp .env.example .env        # Windows PowerShell: Copy-Item .env.example .env
+env
+JWT_SECRET=change-me-to-a-long-random-string
+JWT_EXPIRES_IN=1h
+3. Run the server
+bash
+npm run start:dev
 
-## Project setup
+The API runs at http://localhost:3000. Swagger docs: http://localhost:3000/docs.
 
-```bash
-$ npm install
-```
+The SQLite database file (db.sqlite) is created automatically on first run.
 
-## Compile and run the project
+4. Run the tests
+bash
+npm run test:e2e
 
-```bash
-# development
-$ npm run start
+Tests use an in-memory database, so your real data is never touched.
 
-# watch mode
-$ npm run start:dev
+API Endpoints
+Method	Endpoint	Auth	Description
+POST	/auth/register	No	Create a new user
+POST	/auth/login	No	Verify credentials and get a JWT
+GET	/auth/profile	Bearer	Get the logged-in user's details
+GET	/users	Bearer	List users (pagination, search, filter, sort)
+Register
 
-# production mode
-$ npm run start:prod
-```
+POST /auth/register
 
-## Run tests
+json
+{ "name": "Test", "email": "test@mail.com", "password": "123456" }
 
-```bash
-# unit tests
-$ npm run test
+Response 201:
 
-# e2e tests
-$ npm run test:e2e
+json
+{ "id": 1, "name": "Test", "email": "test@mail.com", "createdAt": "2026-11-22T17:15:29.000Z" }
+Login
 
-# test coverage
-$ npm run test:cov
-```
+POST /auth/login
 
-## Deployment
+json
+{ "email": "test@mail.com", "password": "123456" }
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Response 201:
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+json
+{ "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
+Profile
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+GET /auth/profile with header Authorization: Bearer <access_token>
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Response 200:
 
-## Observability
+json
+{ "id": 1, "name": "Test", "email": "test@mail.com", "createdAt": "2026-11-22T17:15:29.000Z" }
+List users
 
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
+GET /users with header Authorization: Bearer <access_token>
 
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
+Query param	Default	Description
+page	1	Page number (min 1)
+limit	10	Items per page (1 to 50)
+search	-	Partial match on name or email
+createdAfter	-	Only users created on/after this ISO date
+sortBy	createdAt	One of id, name, email, createdAt
+order	DESC	ASC or DESC
 
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
+Example: GET /users?page=1&limit=3&search=ali&sortBy=name&order=ASC
 
-This project is already instrumented. To connect it, run this and approve the code it prints at [observe.nestjs.com/link](https://observe.nestjs.com/link) - signing up for free if you have no account:
-
-```bash
-$ npx @nestjs/observe link
-```
-
-It writes the app key and secret into `.env` and makes every `nest start` script (`start`, `start:dev`, `start:debug`) load it. In production, set `OBSERVE_APP_KEY` and `OBSERVE_APP_SECRET` in the environment instead.
-
-Or do it by hand: create an application and an API key at [observe.nestjs.com](https://observe.nestjs.com), and set the pair as `OBSERVE_APP_KEY` and `OBSERVE_APP_SECRET` in the environment the app runs in.
-
-The free plan needs no payment details and covers 300,000 events a month. You can also browse the [live demo](https://www.observe-demo.nestjs.com/dashboard) first - the whole dashboard over a busy service's data, with nothing to install.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observe](https://observe.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+json
+{
+  "data": [
+    { "id": 3, "name": "Ali", "email": "ali@mail.com", "createdAt": "2026-11-22T17:35:44.000Z" }
+  ],
+  "meta": { "total": 1, "page": 1, "limit": 3, "totalPages": 1 }
+}
+Status Codes
+Code	Meaning
+200	OK
+201	Created
+400	Validation failed (missing or invalid data)
+401	Missing/invalid/expired token or wrong credentials
+409	Email already registered
+429	Too many requests (rate limit exceeded)
+Project Structure
+src/
+├── auth/
+│   ├── dto/                 # register.dto.ts, login.dto.ts
+│   ├── auth.controller.ts   # /auth routes
+│   ├── auth.service.ts      # hashing, login, JWT signing
+│   ├── auth.module.ts
+│   └── jwt-auth.guard.ts    # protects routes
+├── users/
+│   ├── dto/query-users.dto.ts
+│   ├── user.entity.ts
+│   ├── users.controller.ts  # GET /users
+│   ├── users.service.ts
+│   └── users.module.ts
+├── app.module.ts
+└── main.ts
+test/
+└── auth.e2e-spec.ts
+Security Notes
+Passwords are hashed with bcrypt (10 salt rounds).
+Passwords are never returned in any response.
+Login returns the same error for a wrong email or a wrong password.
+sortBy is whitelisted so clients cannot sort by sensitive columns.
+The JWT secret is read from .env, which is git-ignored.
+synchronize: true is for development only; use migrations in production.
