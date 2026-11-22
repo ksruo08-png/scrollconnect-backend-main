@@ -1,0 +1,15 @@
+### 1. Register
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{ "name": "Test", "email": "test@mail.com", "password": "123456" }
+
+### 2. Login
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{ "email": "test@mail.com", "password": "123456" }
+
+### 3. Profile (token yahan paste karo)
+GET http://localhost:3000/auth/profile
+Authorization: Bearer PASTE_TOKEN_HERE
